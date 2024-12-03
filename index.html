@@ -22,6 +22,39 @@ body {
   padding: 10px;
 }
 
+.auth-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
+.auth-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.auth-btn:hover {
+  background: rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+}
+
+.auth-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.auth-btn:hover svg {
+  transform: translateX(3px);
+}
+
 .mantra-marquee {
   background: linear-gradient(135deg, #5c2684 0%, #3f1f5c 100%);
   color: white;
@@ -811,6 +844,131 @@ th:last-child {
 .modal-btn.cancel:hover {
   background: #e2e6ea;
 }
+
+/* Add this CSS for the login modal */
+.login-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.login-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.login-header {
+  margin-bottom: 25px;
+}
+
+.login-header h3 {
+  color: #5c2684;
+  font-size: 1.8em;
+  margin-bottom: 10px;
+}
+
+.login-header p {
+  color: #666;
+  font-size: 0.95em;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.login-input {
+  padding: 12px;
+  border: 2px solid #eee;
+  border-radius: 8px;
+  font-size: 1em;
+  transition: all 0.3s ease;
+}
+
+.login-input:focus {
+  border-color: #5c2684;
+  box-shadow: 0 0 0 4px rgba(92, 38, 132, 0.1);
+}
+
+.login-submit {
+  background: linear-gradient(135deg, #5c2684 0%, #3f1f5c 100%);
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(92, 38, 132, 0.2);
+}
+
+.login-options {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.login-divider {
+  display: none;  /* Hide the divider since there's no Google option */
+}
+
+.login-error {
+  color: #dc3545;
+  font-size: 0.9em;
+  margin-top: 10px;
+  display: none;
+}
+
+/* Add these styles */
+.close-login {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.close-login:hover {
+  color: #333;
+  transform: scale(1.1);
+}
+
+.login-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: none;
+}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1175,14 +1333,10 @@ function updateDistributionTable(distributions) {
     const actualIndex = rowsPerPage === 'all' ? 
       index + 1 : 
       (currentPage - 1) * rowsPerPage + index + 1;
-    
-    row.innerHTML = `
-      <td>${actualIndex}</td>
-      <td>${dist.date}</td>
-      <td>${dist.marathonType}</td>
-      <td>${dist.distributor}</td>
-      <td>${dist.quantity}</td>
-      <td class="action-icons">
+
+    // Only show action column if authenticated
+    const actionColumn = window.isAuthenticated ? 
+      `<td class="action-icons" style="display: flex;">
         <button class="icon-button edit-icon" onclick="editDistribution('${dist.id}')" title="Edit">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -1195,7 +1349,16 @@ function updateDistributionTable(distributions) {
             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
           </svg>
         </button>
-      </td>
+      </td>` :
+      '<td class="action-icons" style="display: none;">-</td>';
+
+    row.innerHTML = `
+      <td>${actualIndex}</td>
+      <td>${dist.date}</td>
+      <td>${dist.marathonType}</td>
+      <td>${dist.distributor}</td>
+      <td>${dist.quantity}</td>
+      ${actionColumn}
     `;
     tableBody.appendChild(row);
   });
@@ -1203,7 +1366,87 @@ function updateDistributionTable(distributions) {
   updatePagination(totalItems);
 }
 
+function updatePagination(totalItems) {
+  const paginationContainer = document.getElementById('pagination-container');
+  if (!paginationContainer) return;
+
+  // Clear previous pagination
+  paginationContainer.innerHTML = '';
+
+  if (rowsPerPage === 'all') {
+    // If showing all items, just show the total count
+    paginationContainer.innerHTML = `
+      <div class="entries-per-page">
+        <span>Show</span>
+        <select onchange="changeRowsPerPage(this.value)">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="all" selected>All</option>
+        </select>
+        <span>entries</span>
+      </div>
+      <div class="page-info">Showing all ${totalItems} entries</div>
+    `;
+    return;
+  }
+
+  const totalPages = Math.ceil(totalItems / parseInt(rowsPerPage));
+  
+  // Show entries per page selector
+  let html = `
+    <div class="entries-per-page">
+      <span>Show</span>
+      <select onchange="changeRowsPerPage(this.value)">
+        <option value="10" ${rowsPerPage === '10' ? 'selected' : ''}>10</option>
+        <option value="25" ${rowsPerPage === '25' ? 'selected' : ''}>25</option>
+        <option value="50" ${rowsPerPage === '50' ? 'selected' : ''}>50</option>
+        <option value="all">All</option>
+      </select>
+      <span>entries</span>
+    </div>
+  `;
+
+  // Add pagination controls
+  html += '<div class="pagination">';
+  
+  // Previous button
+  html += `
+    <button onclick="changePage(${currentPage - 1})" 
+            ${currentPage === 1 ? 'disabled' : ''}>
+      Previous
+    </button>
+  `;
+
+  // Page numbers
+  const startItem = ((currentPage - 1) * parseInt(rowsPerPage)) + 1;
+  const endItem = Math.min(startItem + parseInt(rowsPerPage) - 1, totalItems);
+  
+  html += `
+    <span class="page-info">
+      Showing ${startItem} to ${endItem} of ${totalItems} entries
+    </span>
+  `;
+
+  // Next button
+  html += `
+    <button onclick="changePage(${currentPage + 1})" 
+            ${currentPage >= totalPages ? 'disabled' : ''}>
+      Next
+    </button>
+  `;
+
+  html += '</div>';
+  
+  paginationContainer.innerHTML = html;
+}
+
 function editDistribution(id) {
+  if (!window.isAuthenticated) {
+    alert('Please login to edit distribution data');
+    return;
+  }
+  
   if (!id || !window.getDbRef) return;
   
   const distributionsRef = window.getDbRef(`distributions/${id}`);
@@ -1280,6 +1523,10 @@ function editDistribution(id) {
 }
 
 function deleteDistribution(id) {
+  if (!window.isAuthenticated) {
+    alert('Please login to delete distribution data');
+    return;
+  }
   window.deleteId = id; // Store the ID temporarily
   document.getElementById('deleteModal').style.display = 'block';
 }
@@ -1315,6 +1562,103 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
+  const loginForm = document.getElementById('loginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('loginEmail')?.value;
+      const password = document.getElementById('loginPassword')?.value;
+      const errorDiv = document.getElementById('loginError');
+      
+      if (!email || !password) {
+        if (errorDiv) {
+          errorDiv.textContent = 'Please provide both email and password';
+          errorDiv.style.display = 'block';
+        }
+        return;
+      }
+      
+      try {
+        // Use the global functions
+        await window.signInWithEmailAndPassword(window.auth, email, password);
+        closeLoginModal();
+        if (loginForm) loginForm.reset();
+        if (errorDiv) errorDiv.style.display = 'none';
+      } catch (error) {
+        if (errorDiv) {
+          errorDiv.textContent = error.message;
+          errorDiv.style.display = 'block';
+        }
+      }
+    });
+  }
+
+  const marathonType = document.getElementById('marathon-type');
+  if (marathonType) {
+    marathonType.addEventListener('change', function(e) {
+      const newTeamInput = document.getElementById('marathon-type-new');
+      if (!newTeamInput) return;
+      
+      newTeamInput.style.display = this.value === 'other' ? 'block' : 'none';
+      if (this.value !== 'other') {
+        newTeamInput.value = '';
+        
+        const distributionsRef = window.getDbRef('distributions');
+        if (!distributionsRef) return;
+        
+        window.onValue(distributionsRef, (snapshot) => {
+          let distributions = [];
+          snapshot.forEach((childSnapshot) => {
+            const data = childSnapshot.val();
+            if (data) {
+              distributions.push({
+                id: childSnapshot.key,
+                ...data
+              });
+            }
+          });
+          
+          updateDistributorSelectByTeam(this.value, distributions);
+        }, {
+          onlyOnce: true
+        });
+      } else {
+        const distributionsRef = window.getDbRef('distributions');
+        if (!distributionsRef) return;
+        
+        window.onValue(distributionsRef, (snapshot) => {
+          let distributions = [];
+          snapshot.forEach((childSnapshot) => {
+            const data = childSnapshot.val();
+            if (data) {
+              distributions.push({
+                id: childSnapshot.key,
+                ...data
+              });
+            }
+          });
+          updateDistributorSelect(distributions);
+        }, {
+          onlyOnce: true
+        });
+      }
+    });
+  }
+
+  const distributorName = document.getElementById('distributor-name');
+  if (distributorName) {
+    distributorName.addEventListener('change', function(e) {
+      const newDistributorInput = document.getElementById('distributor-name-new');
+      if (!newDistributorInput) return;
+      
+      newDistributorInput.style.display = this.value === 'other' ? 'block' : 'none';
+      if (this.value !== 'other') {
+        newDistributorInput.value = '';
+      }
+    });
+  }
+
   // Initialize other functionality...
   const savedRowsPerPage = localStorage.getItem('rowsPerPage');
   if (savedRowsPerPage) {
@@ -1327,6 +1671,12 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (firebaseLoaded) {
     loadDistributions();
+  }
+
+  // Initial hiding of add button on page load
+  const addBtn = document.querySelector('.add-btn');
+  if (addBtn) {
+    addBtn.style.display = 'none';
   }
 });
 
@@ -1424,6 +1774,11 @@ function clearFilters() {
 
 // Function to export data to CSV
 function exportToCSV() {
+  if (!window.isAuthenticated) {
+    alert('Please login to export data');
+    return;
+  }
+  
   // Get filtered data or all data if no filters
   const dataToExport = window.currentFilteredData || [];
 
@@ -1482,48 +1837,162 @@ function exportToCSV() {
   }
 }
 
-// Add this helper function to update pagination properly with null checks
-function updatePagination(totalItems) {
-  const paginationContainer = document.getElementById('pagination-container');
-  
-  if (!paginationContainer) {
-    console.log('Pagination container not found');
-    return;
+// Add this helper function to close the login modal
+function closeLoginModal() {
+  const loginModal = document.getElementById('loginModal');
+  if (loginModal) {
+    loginModal.style.display = 'none';
   }
-  
-  const totalPages = rowsPerPage === 'all' ? 1 : Math.ceil(totalItems / parseInt(rowsPerPage));
-  
-  let paginationHTML = `
-    <div class="entries-per-page">
-      <label>Show entries:</label>
-      <select onchange="changeRowsPerPage(this.value)">
-        <option value="10" ${rowsPerPage === '10' ? 'selected' : ''}>10</option>
-        <option value="25" ${rowsPerPage === '25' ? 'selected' : ''}>25</option>
-        <option value="50" ${rowsPerPage === '50' ? 'selected' : ''}>50</option>
-        <option value="100" ${rowsPerPage === '100' ? 'selected' : ''}>100</option>
-        <option value="all" ${rowsPerPage === 'all' ? 'selected' : ''}>All</option>
-      </select>
-    </div>
-  `;
-  
-  if (rowsPerPage !== 'all') {
-    paginationHTML += `
-      <div class="pagination">
-        <button onclick="changePage(1)" ${currentPage === 1 ? 'disabled' : ''}>First</button>
-        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
-        <span class="page-info">Page ${currentPage} of ${totalPages}</span>
-        <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
-        <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>Last</button>
-      </div>
-    `;
-  }
-  
-  paginationContainer.innerHTML = paginationHTML;
 }
 
-// Add DOMContentLoaded event listener to ensure DOM is ready
+// Function to toggle form visibility
+function toggleForm(formClass) {
+  const filterContainer = document.querySelector('.filter-container');
+  const dataInput = document.querySelector('.data-input');
+  
+  if (!filterContainer || !dataInput) return; // Guard against null elements
+  
+  if (formClass === 'filter-container') {
+    filterContainer.classList.toggle('show');
+    if (dataInput.classList.contains('show')) {
+      dataInput.classList.remove('show');
+    }
+  } else if (formClass === 'data-input') {
+    dataInput.classList.toggle('show');
+    if (filterContainer.classList.contains('show')) {
+      filterContainer.classList.remove('show');
+    }
+  }
+}
+
+// Function to toggle distributors list visibility with null checks
+function toggleDistributorsList() {
+  const list = document.getElementById('distributor-list');
+  const button = document.getElementById('toggle-distributors');
+  
+  if (!list || !button) return; // Guard against null elements
+  
+  list.classList.toggle('show');
+  button.classList.toggle('active');
+}
+
+// Add null checks for modal functionality
+function closeDeleteModal() {
+  const modal = document.getElementById('deleteModal');
+  if (!modal) return;
+  modal.style.display = 'none';
+}
+
+// Update modal click handler with null check
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize any required functionality here
+  const modalOverlay = document.querySelector('.modal-overlay');
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeDeleteModal();
+      }
+    });
+  }
+  
+  const loginForm = document.getElementById('loginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('loginEmail')?.value;
+      const password = document.getElementById('loginPassword')?.value;
+      const errorDiv = document.getElementById('loginError');
+      
+      if (!email || !password) {
+        if (errorDiv) {
+          errorDiv.textContent = 'Please provide both email and password';
+          errorDiv.style.display = 'block';
+        }
+        return;
+      }
+      
+      try {
+        // Use the global functions
+        await window.signInWithEmailAndPassword(window.auth, email, password);
+        closeLoginModal();
+        if (loginForm) loginForm.reset();
+        if (errorDiv) errorDiv.style.display = 'none';
+      } catch (error) {
+        if (errorDiv) {
+          errorDiv.textContent = error.message;
+          errorDiv.style.display = 'block';
+        }
+      }
+    });
+  }
+
+  const marathonType = document.getElementById('marathon-type');
+  if (marathonType) {
+    marathonType.addEventListener('change', function(e) {
+      const newTeamInput = document.getElementById('marathon-type-new');
+      if (!newTeamInput) return;
+      
+      newTeamInput.style.display = this.value === 'other' ? 'block' : 'none';
+      if (this.value !== 'other') {
+        newTeamInput.value = '';
+        
+        const distributionsRef = window.getDbRef('distributions');
+        if (!distributionsRef) return;
+        
+        window.onValue(distributionsRef, (snapshot) => {
+          let distributions = [];
+          snapshot.forEach((childSnapshot) => {
+            const data = childSnapshot.val();
+            if (data) {
+              distributions.push({
+                id: childSnapshot.key,
+                ...data
+              });
+            }
+          });
+          
+          updateDistributorSelectByTeam(this.value, distributions);
+        }, {
+          onlyOnce: true
+        });
+      } else {
+        const distributionsRef = window.getDbRef('distributions');
+        if (!distributionsRef) return;
+        
+        window.onValue(distributionsRef, (snapshot) => {
+          let distributions = [];
+          snapshot.forEach((childSnapshot) => {
+            const data = childSnapshot.val();
+            if (data) {
+              distributions.push({
+                id: childSnapshot.key,
+                ...data
+              });
+            }
+          });
+          
+          updateDistributorSelect(distributions);
+        }, {
+          onlyOnce: true
+        });
+      }
+    });
+  }
+
+  const distributorName = document.getElementById('distributor-name');
+  if (distributorName) {
+    distributorName.addEventListener('change', function(e) {
+      const newDistributorInput = document.getElementById('distributor-name-new');
+      if (!newDistributorInput) return;
+      
+      newDistributorInput.style.display = this.value === 'other' ? 'block' : 'none';
+      if (this.value !== 'other') {
+        newDistributorInput.value = '';
+      }
+    });
+  }
+
+  // Initialize other functionality...
   const savedRowsPerPage = localStorage.getItem('rowsPerPage');
   if (savedRowsPerPage) {
     rowsPerPage = savedRowsPerPage;
@@ -1541,6 +2010,10 @@ document.addEventListener('DOMContentLoaded', () => {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
   import { getDatabase, ref, push, onValue, serverTimestamp, set, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
+  window.auth = null; // Add this line to store auth globally
+  window.signInWithEmailAndPassword = null; // Add this line to store the function globally
 
   const firebaseConfig = {
     apiKey: "AIzaSyCUuktFF02u4OlgFf4JJJfhRdhP7g-OS-0",
@@ -1554,6 +2027,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const app = initializeApp(firebaseConfig);
   const database = getDatabase(app);
+  const auth = getAuth(app);
+
+  // Store auth and signInWithEmailAndPassword globally
+  window.auth = auth;
+  window.signInWithEmailAndPassword = signInWithEmailAndPassword;
 
   window.onValue = onValue;
   window.ref = ref;
@@ -1565,6 +2043,57 @@ document.addEventListener('DOMContentLoaded', () => {
   window.set = set;
   window.remove = remove;
   firebaseLoaded = true;
+
+  window.isAuthenticated = false;
+
+  // Update the auth state listener
+  onAuthStateChanged(auth, (user) => {
+    const loginBtn = document.getElementById('loginBtn');
+    const loginBtnText = document.getElementById('loginBtnText');
+    const addBtn = document.querySelector('.add-btn');
+    const exportBtn = document.querySelector('.export-btn'); // Add this line
+    
+    if (user) {
+      window.isAuthenticated = true;
+      loginBtnText.textContent = 'Logout';  
+      loginBtn.onclick = handleSignOut;
+      if (addBtn) addBtn.style.display = 'flex';
+      if (exportBtn) exportBtn.style.display = 'block'; // Add this line
+      
+      // Reload distributions to show actions
+      loadDistributions();
+    } else {
+      window.isAuthenticated = false;
+      loginBtnText.textContent = 'Login';
+      loginBtn.onclick = handleSignIn;
+      if (addBtn) addBtn.style.display = 'none';
+      if (exportBtn) exportBtn.style.display = 'none'; // Add this line
+      
+      // Reload distributions to hide actions
+      loadDistributions();
+    }
+  });
+
+  // Add auth handlers
+  async function handleSignOut() {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  }
+
+  // Add this in the type="module" script section
+  function handleSignIn() {
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+      loginModal.style.display = 'block';
+    }
+  }
+
+  // Make these functions globally available
+  window.handleSignIn = handleSignIn;
+  window.closeLoginModal = closeLoginModal;
 
   document.addEventListener('DOMContentLoaded', () => {
     const savedRowsPerPage = localStorage.getItem('rowsPerPage');
@@ -1584,8 +2113,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('distribution-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    if (!firebaseLoaded) {
-      console.log('Firebase not yet loaded');
+    if (!window.isAuthenticated) {
+      alert('Please login to add or update distribution data');
       return;
     }
 
@@ -1672,6 +2201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
           }
         });
+        
         updateDistributorSelect(distributions);
       }, {
         onlyOnce: true
@@ -1698,7 +2228,15 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
   
   <div class="header">
-    <h1>ISKCON Jaipur Gita Marathon</h1>
+    <div class="auth-container">
+      <button id="loginBtn" class="auth-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/>
+        </svg>
+        <span id="loginBtnText">Login</span>
+      </button>
+    </div>
+    <h1 style="padding-top: 20px;">ISKCON Jaipur Gita Marathon</h1>
     <p>Track and monitor book distribution progress</p>
   </div>
 
@@ -1862,162 +2400,26 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 
-<script>
-// Function to toggle form visibility
-function toggleForm(formClass) {
-  const filterContainer = document.querySelector('.filter-container');
-  const dataInput = document.querySelector('.data-input');
-  
-  if (!filterContainer || !dataInput) return; // Guard against null elements
-  
-  if (formClass === 'filter-container') {
-    filterContainer.classList.toggle('show');
-    if (dataInput.classList.contains('show')) {
-      dataInput.classList.remove('show');
-    }
-  } else if (formClass === 'data-input') {
-    dataInput.classList.toggle('show');
-    if (filterContainer.classList.contains('show')) {
-      filterContainer.classList.remove('show');
-    }
-  }
-}
+<div class="login-modal" id="loginModal">
+  <div class="login-container">
+    <button class="close-login" onclick="closeLoginModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+    <div class="login-header">
+      <h3>Welcome Back</h3>
+      <p>Sign in to access distribution management</p>
+    </div>
+    <form id="loginForm" class="login-form">
+      <input type="email" placeholder="Email" class="login-input" id="loginEmail" required>
+      <input type="password" placeholder="Password" class="login-input" id="loginPassword" required>
+      <button type="submit" class="login-submit">Sign In</button>
+    </form>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
 
-// Function to toggle distributors list visibility with null checks
-function toggleDistributorsList() {
-  const list = document.getElementById('distributor-list');
-  const button = document.getElementById('toggle-distributors');
-  
-  if (!list || !button) return; // Guard against null elements
-  
-  list.classList.toggle('show');
-  button.classList.toggle('active');
-}
-
-// Add null checks for modal functionality
-function closeDeleteModal() {
-  const modal = document.getElementById('deleteModal');
-  if (!modal) return;
-  modal.style.display = 'none';
-}
-
-// Update modal click handler with null check
-document.addEventListener('DOMContentLoaded', () => {
-  const modalOverlay = document.querySelector('.modal-overlay');
-  if (modalOverlay) {
-    modalOverlay.addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeDeleteModal();
-      }
-    });
-  }
-  
-  // Initialize other functionality...
-  const savedRowsPerPage = localStorage.getItem('rowsPerPage');
-  if (savedRowsPerPage) {
-    rowsPerPage = savedRowsPerPage;
-    const select = document.querySelector('.entries-per-page select');
-    if (select) {
-      select.value = savedRowsPerPage;
-    }
-  }
-  
-  if (firebaseLoaded) {
-    loadDistributions();
-  }
-});
-
-// Add null checks for form submission
-function confirmDelete() {
-  const id = window.deleteId;
-  if (id && window.remove) {
-    const distributionsRef = window.getDbRef(`distributions/${id}`);
-    if (distributionsRef) {
-      window.remove(distributionsRef)
-        .catch((error) => {
-          console.error('Error deleting distribution:', error);
-        });
-      closeDeleteModal();
-    }
-  }
-}
-
-// Add null checks for edit functionality
-function editDistribution(id) {
-  if (!id || !window.getDbRef) return;
-  
-  const distributionsRef = window.getDbRef(`distributions/${id}`);
-  window.onValue(distributionsRef, async (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      const dataInput = document.querySelector('.data-input');
-      if (!dataInput) return;
-      
-      dataInput.classList.add('show');
-      
-      // Get all form elements with null checks
-      const marathonTypeSelect = document.getElementById('marathon-type');
-      const distributorSelect = document.getElementById('distributor-name');
-      const quantityInput = document.getElementById('quantity');
-      const dateInput = document.getElementById('distribution-date');
-      const form = document.getElementById('distribution-form');
-      const marathonTypeNew = document.getElementById('marathon-type-new');
-      const distributorNameNew = document.getElementById('distributor-name-new');
-      
-      if (!marathonTypeSelect || !distributorSelect || !quantityInput || 
-          !dateInput || !form || !marathonTypeNew || !distributorNameNew) return;
-      
-      // Set values with null checks
-      marathonTypeSelect.value = data.marathonType || '';
-      
-      // Wait for team-specific distributors to load
-      try {
-        await new Promise((resolve) => {
-          const distributionsRef = window.getDbRef('distributions');
-          window.onValue(distributionsRef, (snapshot) => {
-            let distributions = [];
-            snapshot.forEach((childSnapshot) => {
-              const dist = childSnapshot.val();
-              if (dist) {
-                distributions.push({
-                  id: childSnapshot.key,
-                  ...dist
-                });
-              }
-            });
-            
-            updateDistributorSelectByTeam(data.marathonType, distributions);
-            resolve();
-          }, {
-            onlyOnce: true
-          });
-        });
-      } catch (error) {
-        console.error('Error loading team distributors:', error);
-      }
-      
-      distributorSelect.value = data.distributor || '';
-      quantityInput.value = data.quantity || '';
-      dateInput.value = data.date || '';
-      form.setAttribute('data-edit-id', id);
-      
-      marathonTypeNew.style.display = 'none';
-      distributorNameNew.style.display = 'none';
-      marathonTypeNew.value = '';
-      distributorNameNew.value = '';
-
-      // Scroll to form with null check
-      if (dataInput) {
-        dataInput.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
-    }
-  }, {
-    onlyOnce: true
-  });
-}
-</script>
 </body>
 </html>
